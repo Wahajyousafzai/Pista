@@ -11,6 +11,8 @@ interface PeerContextType {
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
   connection: DataConnection | null;
+  mediaConnection: MediaConnection | null;
+  isCallActive: boolean;
   sendData: (data: any) => void;
   connectToPeer: (recipientId: string) => void;
   disconnectPeer: () => void;
@@ -29,6 +31,7 @@ export function PeerProvider({ children }: { children: React.ReactNode }) {
   const [connectedPeerId, setConnectedPeerId] = useState<string | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [isCallActive, setIsCallActive] = useState(false);
 
   const { toast } = useToast();
 
@@ -47,7 +50,6 @@ export function PeerProvider({ children }: { children: React.ReactNode }) {
         setConnectedPeerId(conn.peer);
         toast({ title: "Connected", description: `Connected to peer: ${conn.peer}` });
       });
-      conn.on("data", (data) => console.log("Received data:", data));
       conn.on("close", () => {
         setConnection(null);
         setIsConnected(false);
@@ -55,42 +57,68 @@ export function PeerProvider({ children }: { children: React.ReactNode }) {
       });
     });
 
-    newPeer.on("call", (call) => {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
+    newPeer.on("call", async (call) => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setLocalStream(stream);
         call.answer(stream);
         call.on("stream", (remoteStream) => setRemoteStream(remoteStream));
         call.on("close", () => {
           setRemoteStream(null);
           setMediaConnection(null);
+          setIsCallActive(false);
         });
         setMediaConnection(call);
-        setIsConnected(true);
+        setIsCallActive(true);
         setConnectedPeerId(call.peer);
-      });
+      } catch (error) {
+        toast({ title: "Media Error", description: (error as Error).message, variant: "destructive" });
+      }
     });
-
-    newPeer.on("disconnected", () => newPeer.reconnect());
-    newPeer.on("error", (err) => toast({ title: "Peer Error", description: err.message, variant: "destructive" }));
 
     return () => newPeer.destroy();
   }, []);
 
-  const sendData = (data: any) => {
-    if (connection) {
-      connection.send(data);
-    } else {
-      toast({ title: "Error", description: "No active connection to send data.", variant: "destructive" });
+  const startCall = async (recipientId: string) => {
+    if (!peer) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setLocalStream(stream);
+      const call = peer.call(recipientId, stream);
+      call.on("stream", (remoteStream) => setRemoteStream(remoteStream));
+      call.on("close", () => {
+        setRemoteStream(null);
+        setMediaConnection(null);
+        setIsCallActive(false);
+      });
+      setMediaConnection(call);
+      setIsCallActive(true);
+      setConnectedPeerId(recipientId);
+    } catch (error) {
+      toast({ title: "Call Error", description: (error as Error).message, variant: "destructive" });
     }
+  };
+
+  const endCall = () => {
+    mediaConnection?.close();
+    localStream?.getTracks().forEach((track) => track.stop());
+    setLocalStream(null);
+    setRemoteStream(null);
+    setIsCallActive(false);
+    toast({ title: "Call Ended", description: "The call has been terminated" });
+  };
+
+  const sendData = (data: any) => {
+    connection?.send(data);
   };
 
   const connectToPeer = (recipientId: string) => {
     if (!peer) return;
     const conn = peer.connect(recipientId);
+    setConnection(conn);
     conn.on("open", () => {
       setIsConnected(true);
       setConnectedPeerId(recipientId);
-      setConnection(conn);
       toast({ title: "Connected", description: `Connected to peer: ${recipientId}` });
     });
     conn.on("close", () => {
@@ -102,45 +130,14 @@ export function PeerProvider({ children }: { children: React.ReactNode }) {
 
   const disconnectPeer = () => {
     connection?.close();
-    mediaConnection?.close();
+    setConnection(null);
     setIsConnected(false);
     setConnectedPeerId(null);
-    setConnection(null);
-    setMediaConnection(null);
-    setLocalStream(null);
-    setRemoteStream(null);
-    toast({ title: "Disconnected", description: "You have been disconnected." });
+    toast({ title: "Disconnected", description: "You have disconnected from the peer." });
   };
 
-const startCall = (recipientId: string) => {
-  if (!peer) return;
-  navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-    setLocalStream(stream);
-    const call = peer.call(recipientId, stream);
-    call.on("stream", (remoteStream) => setRemoteStream(remoteStream));
-    call.on("close", () => {
-      setRemoteStream(null);
-      setMediaConnection(null);
-    });
-    setMediaConnection(call);
-    setIsConnected(true);
-    setConnectedPeerId(recipientId);
-  });
-};
-
-const endCall = () => {
-  if (mediaConnection) {
-    mediaConnection.close();
-    setMediaConnection(null);
-  }
-  localStream?.getTracks().forEach((track) => track.stop());
-  setLocalStream(null);
-  setRemoteStream(null);
-  toast({ title: "Call Ended", description: "The call has been terminated" });
-};
-
   return (
-    <PeerContext.Provider value={{ peerId, isConnected, connectedPeerId, localStream, remoteStream, connection, sendData, connectToPeer, disconnectPeer, startCall, endCall }}>
+    <PeerContext.Provider value={{ peerId, isConnected, connectedPeerId, localStream, remoteStream, connection, mediaConnection, isCallActive, sendData, connectToPeer, disconnectPeer, startCall, endCall }}>
       {children}
     </PeerContext.Provider>
   );

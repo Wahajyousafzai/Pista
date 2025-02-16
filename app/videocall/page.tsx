@@ -1,4 +1,4 @@
-import { VideoCallComponent } from "@/components/VideoCall";
+import { VideoCallComponent } from "@/components/VideoCallComponent";
 import { VideoCallControls } from "@/components/VideoCallControls";
 
 export default function VideoCallPage() {

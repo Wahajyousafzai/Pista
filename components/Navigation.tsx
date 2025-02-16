@@ -1,68 +1,54 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { FloatingDock } from "./FloatingDock";
-import { IconMessage, IconFolder, IconVideo, IconHome } from "@tabler/icons-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
-const navigationItems = [
-  { title: "Home", icon: <IconHome className="h-full w-full" />, href: "/" },
-  { title: "Chat", icon: <IconMessage className="h-full w-full" />, href: "/chat" },
-  { title: "Files", icon: <IconFolder className="h-full w-full" />, href: "/sharefiles" },
-  { title: "Video", icon: <IconVideo className="h-full w-full" />, href: "/videocall" },
-];
-
-export function Navigation(): React.ReactElement {
+export function Navigate() {
   const [isVisible, setIsVisible] = useState(true);
-  let hideTimeout: number;
-  let showTimeout: number;
+  let timeoutId: NodeJS.Timeout | null = null;
 
   useEffect(() => {
-    const hideNav = () => {
-      hideTimeout = window.setTimeout(() => {
-        setIsVisible(false);
-      }, 3000);
-    };
-
-    hideNav(); // Start hiding timer when component mounts
-
-    const showNav = () => {
-      clearTimeout(hideTimeout);
-      clearTimeout(showTimeout);
+    const showNavbar = () => {
       setIsVisible(true);
-
-      // Hide again after 3s of inactivity
-      hideTimeout = window.setTimeout(() => {
-        setIsVisible(false);
-      }, 3000);
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => setIsVisible(false), 3000);
     };
 
-    const handleUserInteraction = () => {
-      clearTimeout(showTimeout);
-      showTimeout = window.setTimeout(showNav, 500); // Delay appearance by 0.5s
-    };
+    // Show navbar when user interacts (mouse move or touch)
+    window.addEventListener("mousemove", showNavbar);
+    window.addEventListener("touchstart", showNavbar);
 
-    document.addEventListener("mousemove", handleUserInteraction);
-    document.addEventListener("keydown", handleUserInteraction);
-    document.addEventListener("click", handleUserInteraction);
-    document.addEventListener("scroll", handleUserInteraction);
+    // Hide after 3 seconds of inactivity
+    timeoutId = setTimeout(() => setIsVisible(false), 3000);
 
     return () => {
-      clearTimeout(hideTimeout);
-      clearTimeout(showTimeout);
-      document.removeEventListener("mousemove", handleUserInteraction);
-      document.removeEventListener("keydown", handleUserInteraction);
-      document.removeEventListener("click", handleUserInteraction);
-      document.removeEventListener("scroll", handleUserInteraction);
+      if (timeoutId) clearTimeout(timeoutId);
+      window.removeEventListener("mousemove", showNavbar);
+      window.removeEventListener("touchstart", showNavbar);
     };
   }, []);
 
   return (
-    <div
-      className={`fixed bottom-4 left-1/2 -translate-x-1/2 transition-all duration-300 ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-      }`}
+    <nav
+      className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 flex gap-6
+                  bg-gray-100 backdrop-blur-lg shadow-lg p-2 px-3 rounded-full 
+                  border border-gray-300 transition-all duration-500 ease-in-out
+                  ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}`}
     >
-      <FloatingDock items={navigationItems} />
-    </div>
+      <NavItem href="/" src="/home.svg" alt="Home" />
+      <NavItem href="/sharefiles" src="/share.svg" alt="Share Files" />
+      <NavItem href="/videocall" src="/videocall.svg" alt="Video Call" />
+    </nav>
+  );
+}
+
+function NavItem({ href, src, alt }: { href: string; src: string; alt: string }) {
+  return (
+    <Link
+      href={href}
+      className="p-3 rounded-full transition-all hover:bg-gray-300 active:scale-90"
+    >
+      <img src={src} alt={alt} className="w-7 h-7" />
+    </Link>
   );
 }
