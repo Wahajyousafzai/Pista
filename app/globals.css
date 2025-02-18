@@ -92,3 +92,22 @@ body {
     @apply bg-background text-foreground;
   }
 }
+@layer utilities {
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+}
+
+/* Add smooth transition for theme changes */
+* {
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color
+    0.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bg-custom {
+  background-image: url('/bg.png');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+

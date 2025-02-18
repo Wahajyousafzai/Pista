@@ -1,54 +1,57 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Home, Video, Share } from "lucide-react";
+import { Button } from "./ui/button";
+import Link from "next/link";
 
 export function Navigate() {
-  const [isVisible, setIsVisible] = useState(true);
-  let timeoutId: NodeJS.Timeout | null = null;
+  const [isMounted, setIsMounted] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    const showNavbar = () => {
-      setIsVisible(true);
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => setIsVisible(false), 3000);
+    setIsMounted(true);
+
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth > 1024);
     };
 
-    // Show navbar when user interacts (mouse move or touch)
-    window.addEventListener("mousemove", showNavbar);
-    window.addEventListener("touchstart", showNavbar);
-
-    // Hide after 3 seconds of inactivity
-    timeoutId = setTimeout(() => setIsVisible(false), 3000);
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      window.removeEventListener("mousemove", showNavbar);
-      window.removeEventListener("touchstart", showNavbar);
-    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  if (!isMounted || !isDesktop) return null;
+
   return (
-    <nav
-      className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 flex gap-6
-                  bg-gray-100 backdrop-blur-lg shadow-lg p-2 px-3 rounded-full 
-                  border border-gray-300 transition-all duration-500 ease-in-out
-                  ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}`}
-    >
-      <NavItem href="/" src="/home.svg" alt="Home" />
-      <NavItem href="/sharefiles" src="/share.svg" alt="Share Files" />
-      <NavItem href="/videocall" src="/videocall.svg" alt="Video Call" />
+    <nav className="fixed left-6 top-1/2 -translate-y-1/2 z-50">
+      <div className="flex flex-col gap-6 p-3 rounded-2xl border border-white/20 shadow-xl 
+                      bg-white/10 backdrop-blur-md transition-all hover:backdrop-blur-xl">
+        {navLinks.map(({ href, icon: Icon, label }) => (
+          <Link key={href} href={href} className="group">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative flex items-center justify-center p-3 rounded-xl
+                        text-white/70 transition-all group-hover:text-white group-hover:bg-white/10"
+            >
+              <Icon size={28} />
+              <span
+                className="absolute left-14 opacity-0 group-hover:opacity-100 transition-opacity 
+                           text-white bg-black/50 px-2 py-1 rounded-lg text-sm"
+              >
+                {label}
+              </span>
+            </Button>
+          </Link>
+        ))}
+      </div>
     </nav>
   );
 }
 
-function NavItem({ href, src, alt }: { href: string; src: string; alt: string }) {
-  return (
-    <Link
-      href={href}
-      className="p-3 rounded-full transition-all hover:bg-gray-300 active:scale-90"
-    >
-      <img src={src} alt={alt} className="w-7 h-7" />
-    </Link>
-  );
-}
+const navLinks = [
+  { href: "/", icon: Home, label: "Home" },
+  { href: "/videocall", icon: Video, label: "Video Call" },
+  { href: "/sharefiles", icon: Share, label: "Share Files" },
+];

@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Navigate } from "@/components/Navigation"
 import "./globals.css"
 import { PeerProvider } from "@/contexts/PeerContext"
+import { MenuBar } from "@/components/menu-bar"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,8 +32,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <PeerProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <main>{children}</main>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
+            <main className="bg-custom"><MenuBar/>{children}</main>
             <Toaster />
             <Navigate />
           </ThemeProvider>
