@@ -118,4 +118,3 @@ function ControlButton({ onClick, isOn, icon, tooltip, variant = "default" }: Co
     </Tooltip>
   )
 }
-
