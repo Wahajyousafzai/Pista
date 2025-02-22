@@ -13,7 +13,7 @@ const backgrounds = [
   { name: "Blur", src: "blur" },
 ];
 
-export function VideoCallComponent() {
+export default function VideoCallComponent() {
   const { remoteStream, localStream, startCall, connectedPeerId, isCallActive, toggleSegmentation, segmentationEnabled, updateBackground } = usePeer();
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -81,4 +81,3 @@ export function VideoCallComponent() {
   );
 }
 
-export default VideoCallComponent;
