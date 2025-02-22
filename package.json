@@ -42,8 +42,8 @@
     "@svgr/webpack": "^8.1.0",
     "@tabler/icons-react": "latest",
     "@tensorflow-models/body-pix": "^2.2.1",
-    "@tensorflow/tfjs": "^4.22.0",
     "@tensorflow/tfjs-backend-cpu": "^4.22.0",
+    "@tensorflow/tfjs-backend-webgl": "^4.22.0",
     "@tensorflow/tfjs-backend-webgpu": "^4.22.0",
     "@tensorflow/tfjs-core": "^4.22.0",
     "autoprefixer": "^10.4.20",
@@ -73,6 +73,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
