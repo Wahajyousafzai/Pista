@@ -168,4 +168,4 @@ export default function VideoCallComponent() {
 <<<<<<< HEAD
 =======
 
->>>>>>> 3457a4b46abc41fba881c9caf554075690f2f660
+export default VideoCallComponent;
